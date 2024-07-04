@@ -1,19 +1,32 @@
-const TelegramBot = require("node-telegram-bot-api");
-const cron = require("node-cron");
-const User = require("./models/User");
-const connectMongoDB = require("./config/db");
-require("dotenv").config();
+const express = require('express');
+const bodyParser = require('body-parser');
+const TelegramBot = require('node-telegram-bot-api');
+const cron = require('node-cron');
+const axios = require('axios');
+const User = require('./models/User');
+const Task = require('./models/Task');
+const connectMongoDB = require('./config/db');
+require('dotenv').config();
 
 // connecting to the db
 connectMongoDB();
 
 const token = process.env.TELEGRAM_TOKEN;
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(token);
+
+const app = express();
+app.use(bodyParser.json());
+
+// Webhook route
+app.post(`/bot${token}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
 
 // listener for /start command
 bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id,
-    "Welcome to Task Manager Bot! Use /register to register.");
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, 'Welcome to Task Manager Bot! Use /register to get started.');
 });
 
 // listener for /register command
@@ -24,14 +37,14 @@ bot.onText(/\/register/, (msg) => {
 
   User.findOne({ userId }, (err, user) => {
     if (user) {
-      bot.sendMessage(chatId, "You are already registered.");
+      bot.sendMessage(chatId, 'You are already registered.');
     } else {
       const newUser = new User({ userId, username });
       newUser.save((err) => {
         if (err) {
-          bot.sendMessage(chatId, "Registration failed. Please try again.");
+          bot.sendMessage(chatId, 'Registration failed. Please try again.');
         } else {
-          bot.sendMessage(chatId, "You are registered!");
+          bot.sendMessage(chatId, 'You are registered!');
         }
       });
     }
@@ -49,13 +62,13 @@ bot.onText(/\/create_task (.+) (.+)/, (msg, match) => {
       const newTask = new Task({ userId, description, dueDate, completed: false });
       newTask.save((err) => {
         if (err) {
-          bot.sendMessage(chatId, "Failed to create task. Please try again.");
+          bot.sendMessage(chatId, 'Failed to create task. Please try again.');
         } else {
-          bot.sendMessage(chatId, "Task created successfully!");
+          bot.sendMessage(chatId, 'Task created successfully!');
         }
       });
     } else {
-      bot.sendMessage(chatId, "You need to register first using /register.");
+      bot.sendMessage(chatId, 'You need to register first using /register.');
     }
   });
 });
@@ -68,9 +81,9 @@ bot.onText(/\/update_task (\d+) (.+) (.+)/, (msg, match) => {
 
   Task.findByIdAndUpdate(taskId, { description: newDescription, dueDate: newDueDate }, (err, task) => {
     if (err || !task) {
-      bot.sendMessage(chatId, "Failed to update task. Please check the task ID.");
+      bot.sendMessage(chatId, 'Failed to update task. Please check the task ID.');
     } else {
-      bot.sendMessage(chatId, "Task updated successfully!");
+      bot.sendMessage(chatId, 'Task updated successfully!');
     }
   });
 });
@@ -81,9 +94,9 @@ bot.onText(/\/delete_task (\d+)/, (msg, match) => {
 
   Task.findByIdAndDelete(taskId, (err) => {
     if (err) {
-      bot.sendMessage(chatId, "Failed to delete task. Please check the task ID.");
+      bot.sendMessage(chatId, 'Failed to delete task. Please check the task ID.');
     } else {
-      bot.sendMessage(chatId, "Task deleted successfully!");
+      bot.sendMessage(chatId, 'Task deleted successfully!');
     }
   });
 });
@@ -94,9 +107,9 @@ bot.onText(/\/list_tasks/, (msg) => {
 
   Task.find({ userId }, (err, tasks) => {
     if (err || tasks.length === 0) {
-      bot.sendMessage(chatId, "No tasks found.");
+      bot.sendMessage(chatId, 'No tasks found.');
     } else {
-      let response = "Your tasks:\n";
+      let response = 'Your tasks:\n';
       tasks.forEach((task, index) => {
         response += `${index + 1}. [${task._id}] ${task.description} - Due: ${task.dueDate}\n`;
       });
@@ -111,7 +124,7 @@ cron.schedule('0 8 * * *', () => {
     users.forEach(user => {
       Task.find({ userId: user.userId, completed: false }, (err, tasks) => {
         if (tasks.length > 0) {
-          let response = "Daily summary of your pending tasks:\n";
+          let response = 'Daily summary of your pending tasks:\n';
           tasks.forEach((task, index) => {
             response += `${index + 1}. [${task._id}] ${task.description} - Due: ${task.dueDate}\n`;
           });
@@ -132,3 +145,23 @@ cron.schedule('*/5 * * * *', () => {  // Check every 5 minutes for demo purposes
     });
   });
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+// Set webhook
+const setWebhook = async () => {
+  const url = `https://api.telegram.org/bot${token}/setWebhook`;
+  const webhookUrl = `https://${process.env.NGROK_URL}/bot${token}`;
+
+  try {
+    const response = await axios.post(url, { url: webhookUrl });
+    console.log('Webhook set:', response.data);
+  } catch (error) {
+    console.error('Error setting webhook:', error);
+  }
+};
+
+setWebhook();
