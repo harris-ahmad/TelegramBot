@@ -9,10 +9,11 @@ const connectMongoDB = require('./config/db');
 require('dotenv').config();
 
 // connecting to the db
-connectMongoDB();
+// connectMongoDB();
 
 const token = process.env.TELEGRAM_TOKEN;
-const bot = new TelegramBot(token);
+const bot = new TelegramBot(token, { polling: true });
+const url = `https://api.telegram.org/bot${token}/setWebhook?url=${process.env.NGROK_URL}`
 
 const app = express();
 app.use(bodyParser.json());
@@ -23,9 +24,17 @@ app.post(`/bot${token}`, (req, res) => {
   res.sendStatus(200);
 });
 
+// listener for /help command
+bot.onText(/\/help/, (msg) => {
+  const chatId = msg.chat.id;
+  const response = 'Commands:\n/register - Register with the bot\n/create_task [description] [due date] - Create a new task\n/update_task [task ID] [new description] [new due date] - Update an existing task\n/delete_task [task ID] - Delete a task\n/list_tasks - List all tasks';
+  bot.sendMessage(chatId, response);
+});
+
 // listener for /start command
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
+  console.log(msg);
   bot.sendMessage(chatId, 'Welcome to Task Manager Bot! Use /register to get started.');
 });
 
@@ -153,11 +162,8 @@ app.listen(PORT, () => {
 
 // Set webhook
 const setWebhook = async () => {
-  const url = `https://api.telegram.org/bot${token}/setWebhook`;
-  const webhookUrl = `https://${process.env.NGROK_URL}/bot${token}`;
-
   try {
-    const response = await axios.post(url, { url: webhookUrl });
+    const response = await axios.get(url);
     console.log('Webhook set:', response.data);
   } catch (error) {
     console.error('Error setting webhook:', error);
