@@ -1,7 +1,7 @@
 const TelegramBot = require("node-telegram-bot-api");
 const cron = require("node-cron");
-const User = require("../models/User");
-const connectMongoDB = require("../config/db");
+const User = require("./models/User");
+const connectMongoDB = require("./config/db");
 require("dotenv").config();
 
 // connecting to the db
