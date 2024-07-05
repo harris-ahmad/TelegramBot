@@ -54,14 +54,6 @@ Update `./config/db.js` with your database connection details.
 npm start
 ```
 
-### 6. Set the Webhook (Optional)
-
-If you prefer to use a webhook instead of polling:
-
-```bash
-node setWebhook.js
-```
-
 ## Usage
 
 ### Register with the Bot
