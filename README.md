@@ -23,8 +23,8 @@ Crypto Data Bot is a Telegram bot that allows users to fetch cryptocurrency data
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/crypto-data-bot.git
-cd crypto-data-bot
+git clone https://github.com/harris-ahmad/TelegramBot.git
+cd TelegramBot
 ```
 
 ### 2. Install Dependencies
