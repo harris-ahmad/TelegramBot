@@ -120,5 +120,3 @@ This project is licensed under the MIT License.
 ---
 
 **Happy Crypto Tracking!**
-
-![Crypto](https://images.unsplash.com/photo-1615749035427-5b2db8f1c5a0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MXwyMDg4fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&q=80&w=1080)
