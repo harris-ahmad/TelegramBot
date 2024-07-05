@@ -1,6 +1,6 @@
 # TelegramBot
 
-Crypto Data Bot is a Telegram bot that allows users to fetch cryptocurrency data and set price alerts. The bot fetches data from the CoinGecko API and notifies users about the current prices and their set alerts.
+TelegramBot is a Telegram bot that allows users to fetch cryptocurrency data and set price alerts. The bot fetches data from the CoinGecko API and notifies users about the current prices and their set alerts.
 
 ## Features
 
